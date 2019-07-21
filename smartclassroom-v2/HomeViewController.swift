@@ -38,14 +38,18 @@ struct JSONData {
     
 }
 
+
 class HomeViewController: UIViewController {
+    
+    
+    var roomcount: Int = 0
     
     
     var usertype: String = ""
     var token: String = ""
     
     var roomName: String = ""
-    var airconStatus: String = ""
+    var airconStatus: Any = (Any).self
     var tempStatus: String = ""
     var lightsStatus: String = ""
     
@@ -55,7 +59,7 @@ class HomeViewController: UIViewController {
         "class_name": "",
         "device_name": "",
         "remote_design": "",
-        "device_status": false,
+        "device_status": (Any).self,
         "remote_design_id": 0,
         "device_id": 0,
         "room_status_id": 0
@@ -63,19 +67,18 @@ class HomeViewController: UIViewController {
     
     
     
-    var rooms: [Room] = []
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         createRoomArray()
+        //createRoomButton()
 
         // Do any additional setup after loading the view.
     }
     
     
+
     
     func createRoomArray(){
-        
         let myurl = URL(string: "https://smart-classroom.foundationu.com/api/RoomStatus")
         var request = URLRequest(url: myurl!)
         request.httpMethod = "GET"
@@ -83,12 +86,6 @@ class HomeViewController: UIViewController {
         request.addValue("application/json", forHTTPHeaderField: "content-type")
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         request.addValue(self.token, forHTTPHeaderField: "x-access-token")
-        
-        
-        
-        
-        
-        
         
         let task = URLSession.shared.dataTask(with: request){
             (data: Data?, response: URLResponse?, error: Error?) in
@@ -98,17 +95,12 @@ class HomeViewController: UIViewController {
                 print(error?.localizedDescription ?? "No Data")
                 return
             }
-            
-            
+
             //let stringjson = String(data: data, encoding: .utf8)
             
             //let this = "\(String(describing: stringjson!))"
             
             //print(this)
-            
-            
-            
-            
             
             if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]{
               //  print("\(json["room_status"])")
@@ -118,21 +110,51 @@ class HomeViewController: UIViewController {
                         
                         if let JD = try? JSONData(json: datas){
                            // print(JD.room_name)
+                            
+                            
+                            
+                            
+                            
+                            
+                           self.roomcount = self.roomcount + 1
+                            
                             if let Devices = JD.devices as? [[String: Any]]{
-                                
                                 for Device in Devices{
                                     self.DeviceData["class_name"] = Device["class_name"] as? String
                                     self.DeviceData["device_name"] = Device["device_name"] as? String
                                     self.DeviceData["remote_design"] = Device["remote_design"] as? String
-                                    self.DeviceData["device_status"] = Device["device_status"] as? Bool
+                                    self.DeviceData["device_status"] = Device["device_status"] as? Any
                                     self.DeviceData["remote_design_id"] = Device["remote_design_id"] as? Int
                                     self.DeviceData["device_id"] = Device["device_id"] as? Int
                                     self.DeviceData["room_status_id"] = Device["room_status_id"] as? Int
                                     
-                                    
-                                    print(self.DeviceData)
+                                    switch self.DeviceData["device_name"]!{
+                                        case "Aircon" as String:
+                                            print("Aircon")
+                                            self.airconStatus = self.DeviceData["device_status"]!
+                                            print(self.airconStatus)
+                                        break
+                                        case "Aircon temperature" as String:
+                                            print("Temperature")
+                                            self.tempStatus = self.DeviceData["device_status"] as? Any as! String
+                                            print(self.tempStatus)
+                                        break
+                                        case "Lights" as String:
+                                            print("Lights")
+                                            self.lightsStatus = self.DeviceData["device_status"] as! String
+                                            print(self.lightsStatus)
+                                        break
+                                    default:
+                                        let temp = ""
+                                    }
+                                 
                                 }
                             }
+                            
+                            
+                            
+                            
+                            
                         }
                         
                     }
@@ -140,58 +162,17 @@ class HomeViewController: UIViewController {
                 }
                 
             }
-        
-            
-            
-           
-            
- 
-            
-            
             
         }
         task.resume()
-        
-        
-        
-        
-     /*
-        
-        let room = Room(name: self.roomName, airconStatus: <#T##String#>, tempStatus: <#T##String#>, lightsStatus: <#T##String#>)
-        
-        rooms.append(room)
-    }
-    */
-
+            
+            
+            
 }
+    
+    
+    
+    
 
-/*
-extension ViewController: RoomCellDelegate{
-    
-    func click(roomName: String) {
-        
-    }
-    
-}
 
-extension ViewController: UITableViewDelegate, UITableViewDataSource{
-    
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int{
-        return 0
-    }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell{
-        if case let room == rooms[indexPath.row]{
-        
-            let cell = tableView.dequeueReusableCell(withIdentifier: "RoomViewCell") as! RoomViewCell
-            cell.setRoom(room: room)
-            cell.delegate = self
-            return cell
-        }
-    }
-    
-    
-}
-
-*/
 }
