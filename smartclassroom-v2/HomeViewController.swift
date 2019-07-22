@@ -19,14 +19,12 @@ struct JSONData {
         case missing(String)
         case invalid(String, Any)
     }
-    
-    
+
     init(json:[String: Any])throws {
         guard let room_id = json["room_id"] as? Int else { throw SerializationError.missing("room_id is missing") }
         guard let add_device = json["add_device"] as? Bool else {throw SerializationError.missing("add_device is missing")}
         guard let room_name = json["room_name"] as? String else {throw SerializationError.missing("room_name is missing")}
-        
-       guard let devices = json["devices"] as? Array<Any> else {throw SerializationError.missing("devices is missing")}
+        guard let devices = json["devices"] as? Array<Any> else {throw SerializationError.missing("devices is missing")}
         
         self.room_id = room_id
         self.add_device = add_device
@@ -39,10 +37,41 @@ struct JSONData {
 }
 
 
+struct DeviceData {
+    let class_name: String
+    let device_name: String
+    let remote_design: String
+    let device_status: Any
+    let remote_design_id: Int
+    let device_id: Int
+    let room_status_id: Int
+    
+    enum DeviceError:Error {
+        case deviceMissing(String)
+        case deviceInvalid(String, Any)
+    }
+    
+    init(jsonDevice:[String: Any])throws {
+        guard let class_name = jsonDevice["class_name"] as? String else { throw DeviceError.deviceMissing("class_name is missing") }
+        guard let device_name = jsonDevice["device_name"] as? String else { throw DeviceError.deviceMissing("device_name is missing") }
+        guard let remote_design = jsonDevice["remote_design"] as? String else { throw DeviceError.deviceMissing("remote_design is missong") }
+        guard let device_status = jsonDevice["device_status"] as? Any else { throw DeviceError.deviceMissing("device_status is missing") }
+        guard let remote_design_id = jsonDevice["remote_design_id"] as? Int else { throw DeviceError.deviceMissing("remote_design_id is missing") }
+        guard let device_id = jsonDevice["device_id"] as? Int else { throw DeviceError.deviceMissing("device_id is missong") }
+        guard let room_status_id = jsonDevice["room_status_id"] as? Int else { throw DeviceError.deviceMissing("room_status_id is missong") }
+    
+        self.class_name = class_name
+        self.device_name = device_name
+        self.remote_design = remote_design
+        self.device_status = device_status
+        self.remote_design_id = remote_design_id
+        self.device_id = device_id
+        self.room_status_id = room_status_id
+    }
+}
+
+
 class HomeViewController: UIViewController {
-    
-    
-    var roomcount: Int = 0
     
     
     var usertype: String = ""
@@ -52,18 +81,6 @@ class HomeViewController: UIViewController {
     var airconStatus: Any = (Any).self
     var tempStatus: String = ""
     var lightsStatus: String = ""
-    
-    
-    var DeviceData = [
-    
-        "class_name": "",
-        "device_name": "",
-        "remote_design": "",
-        "device_status": (Any).self,
-        "remote_design_id": 0,
-        "device_id": 0,
-        "room_status_id": 0
-        ] as [String : Any]
     
     
     
@@ -109,47 +126,46 @@ class HomeViewController: UIViewController {
                     for datas in room_status{
                         
                         if let JD = try? JSONData(json: datas){
-                           // print(JD.room_name)
+                            print(JD.room_name)
                             
                             
                             
                             
                             
                             
-                           self.roomcount = self.roomcount + 1
+                            
+                            
+
                             
                             if let Devices = JD.devices as? [[String: Any]]{
                                 for Device in Devices{
-                                    self.DeviceData["class_name"] = Device["class_name"] as? String
-                                    self.DeviceData["device_name"] = Device["device_name"] as? String
-                                    self.DeviceData["remote_design"] = Device["remote_design"] as? String
-                                    self.DeviceData["device_status"] = Device["device_status"] as? Any
-                                    self.DeviceData["remote_design_id"] = Device["remote_design_id"] as? Int
-                                    self.DeviceData["device_id"] = Device["device_id"] as? Int
-                                    self.DeviceData["room_status_id"] = Device["room_status_id"] as? Int
-                                    
-                                    switch self.DeviceData["device_name"]!{
-                                        case "Aircon" as String:
-                                            print("Aircon")
-                                            self.airconStatus = self.DeviceData["device_status"]!
-                                            print(self.airconStatus)
+                                    if let JSONDEVICE = try? DeviceData(jsonDevice: Device){
+                                        print(JSONDEVICE.device_name)
+                                        
+                                        
+                                        
+                                        switch(JSONDEVICE.device_name){
+                                            case "Aircon":
+                                                self.airconStatus = JSONDEVICE.device_status
+                                            break
+                                        case "Aircon temperature":
+                                            self.tempStatus = JSONDEVICE.device_status as! String
                                         break
-                                        case "Aircon temperature" as String:
-                                            print("Temperature")
-                                            self.tempStatus = self.DeviceData["device_status"] as? Any as! String
-                                            print(self.tempStatus)
+                                        case "Lights":
+                                            self.lightsStatus = JSONDEVICE.device_status as! String
                                         break
-                                        case "Lights" as String:
-                                            print("Lights")
-                                            self.lightsStatus = self.DeviceData["device_status"] as! String
-                                            print(self.lightsStatus)
-                                        break
-                                    default:
-                                        let temp = ""
+                                        default:
+                                            return
+                                        }
+                                        
+                                        
+                                        
                                     }
                                  
                                 }
                             }
+                            
+                            print("------------------------")
                             
                             
                             
