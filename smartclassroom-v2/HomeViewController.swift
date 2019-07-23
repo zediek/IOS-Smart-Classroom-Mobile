@@ -78,6 +78,8 @@ class HomeViewController: UIViewController {
     
     var buttons = [UIButton]()
     
+    var roomArray = [String]()
+    
     
     var usertype: String = ""
     var token: String = ""
@@ -196,7 +198,7 @@ class HomeViewController: UIViewController {
                             
                             
                             DispatchQueue.main.async {
-                                
+                                self.roomArray.append({"\(JD.room_name):\(JD.room_id)"}())
                               //  print(JD.room_name)
                                 let RoomButton = UIButton(frame: CGRect(x: buttonX, y: buttonY, width: 190, height: 100))
                                 RoomButton.titleLabel?.lineBreakMode = NSLineBreakMode.byWordWrapping
@@ -266,9 +268,41 @@ class HomeViewController: UIViewController {
     
     
     @objc func RoomButtonPressed(sender:UIButton!){
-        if sender.titleLabel?.text != nil {
-            print(self.roomSearch.text)
+        var weGotData = ""
+       let pattern = "\n.*"
+        let text = sender.titleLabel?.text as! String
+        let regex = try! NSRegularExpression(pattern: pattern, options: .caseInsensitive)
+        let modText = regex.stringByReplacingMatches(in: text, options: [], range: NSRange(location: 0, length: text.count), withTemplate: "") as NSString
+        
+        let attString = NSMutableAttributedString(string: modText as String)
+        let roomname = attString.string
+        
+        let thisroomArray: Array = self.roomArray
+        for r in thisroomArray{
+            let thisPattern = "\(roomname).*[0-9]"
+            let thisRegex = try! NSRegularExpression(pattern: thisPattern, options: [])
+            let thisMatches = thisRegex.matches(in: r, options: [], range: NSRange(location: 0, length: r.count))
+            if thisMatches != []{
+                weGotData = r
+            }
         }
+        
+        let patternAgain = "\(roomname):"
+        let regexAgain = try! NSRegularExpression(pattern: patternAgain, options: [])
+        let modTextAgain = regexAgain.stringByReplacingMatches(in: weGotData, options: [], range: NSRange(location: 0, length: weGotData.count), withTemplate: "") as NSString
+        let attStringAgain = NSMutableAttributedString(string: modTextAgain as String)
+        let roomid = attStringAgain.string
+
+        DispatchQueue.main.async {
+            let remoteViewController = self.storyboard?.instantiateViewController(withIdentifier: "RemoteViewController") as! RemoteViewController
+            remoteViewController.roomName = roomname
+            remoteViewController.roomId = roomid
+            remoteViewController.token = self.token
+            let appDelegate = UIApplication.shared.delegate
+            appDelegate?.window??.rootViewController = remoteViewController
+        }
+        
+        
     }
     
     
