@@ -73,12 +73,17 @@ struct DeviceData {
 
 class HomeViewController: UIViewController {
     
+    @IBOutlet weak var roomSearch: UISearchBar!
+    @IBOutlet weak var roomScrollView: UIScrollView!
+    
+    var buttons = [UIButton]()
+    
     
     var usertype: String = ""
     var token: String = ""
     
     var roomName: String = ""
-    var airconStatus: Any = (Any).self
+    var airconStatus:String = ""
     var tempStatus: String = ""
     var lightsStatus: String = ""
     
@@ -86,6 +91,7 @@ class HomeViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.view.backgroundColor = UIColor.darkGray
         createRoomArray()
         //createRoomButton()
 
@@ -96,6 +102,13 @@ class HomeViewController: UIViewController {
 
     
     func createRoomArray(){
+        
+        self.roomScrollView.translatesAutoresizingMaskIntoConstraints = false
+        
+        self.roomScrollView.topAnchor.constraint(equalTo: self.roomScrollView.topAnchor, constant: 1000).isActive = true
+        self.roomScrollView.bottomAnchor.constraint(equalTo: self.roomScrollView.bottomAnchor, constant: -16).isActive = true
+        
+        
         let myurl = URL(string: "https://smart-classroom.foundationu.com/api/RoomStatus")
         var request = URLRequest(url: myurl!)
         request.httpMethod = "GET"
@@ -122,11 +135,14 @@ class HomeViewController: UIViewController {
             if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]{
               //  print("\(json["room_status"])")
                 if let room_status = json["room_status"] as? [[String: Any]]{
-                    
+                    var i = 300
+                    var buttonX = 0
+                    var buttonY = 0
+                    var isMod = 1
                     for datas in room_status{
                         
                         if let JD = try? JSONData(json: datas){
-                            print(JD.room_name)
+                          //  print(JD.room_name)
                             
                             
                             
@@ -140,40 +156,100 @@ class HomeViewController: UIViewController {
                             if let Devices = JD.devices as? [[String: Any]]{
                                 for Device in Devices{
                                     if let JSONDEVICE = try? DeviceData(jsonDevice: Device){
-                                        print(JSONDEVICE.device_name)
-                                        
-                                        
+                                      //  print(JSONDEVICE.device_name)
                                         
                                         switch(JSONDEVICE.device_name){
                                             case "Aircon":
-                                                self.airconStatus = JSONDEVICE.device_status
+                                                if let airconBool = try? JSONDEVICE.device_status as? String{
+                                                    if airconBool == "true"{
+                                                        self.airconStatus = "on"
+                                                    }else{
+                                                        self.airconStatus = "off"
+                                                    }
+                                                }
+                                                
                                             break
                                         case "Aircon temperature":
                                             self.tempStatus = JSONDEVICE.device_status as! String
                                         break
                                         case "Lights":
-                                            self.lightsStatus = JSONDEVICE.device_status as! String
+                                            if let lightsBool = try? JSONDEVICE.device_status as? String{
+                                                if lightsBool == "true"{
+                                                    self.lightsStatus = "on"
+                                                }else{
+                                                    self.lightsStatus = "off"
+                                                }
+                                            }
                                         break
                                         default:
-                                            return
+                                            let temp = "Wala ra"
                                         }
                                         
-                                        
-                                        
+ 
                                     }
                                  
                                 }
                             }
                             
-                            print("------------------------")
+                            
+
+                            
+                            
+                            DispatchQueue.main.async {
+                                
+                              //  print(JD.room_name)
+                                let RoomButton = UIButton(frame: CGRect(x: buttonX, y: buttonY, width: 190, height: 100))
+                                RoomButton.titleLabel?.lineBreakMode = NSLineBreakMode.byWordWrapping
+                                var Roomtext = NSAttributedString(string: "\(JD.room_name)\nAircon  \(self.airconStatus)\nTemp  \(self.tempStatus)°C\nLights  \(self.lightsStatus)")
+                                RoomButton.setAttributedTitle(Roomtext, for: UIControl.State.normal)
+                                RoomButton.tintColor = UIColor.black
+                                RoomButton.backgroundColor = UIColor.white
+                                RoomButton.tag = i
+                                i += 1
+                                RoomButton.addTarget(self, action: #selector(self.RoomButtonPressed), for: UIControl.Event.touchUpInside)
+                               // self.roomScrollView.addSubview(RoomButton)
+                                self.buttons.append(RoomButton)
+                               
+                              //  RoomButton.translatesAutoresizingMaskIntoConstraints = true
+                               // RoomButton.topAnchor.constraint(equalTo: self.roomScrollView.topAnchor, constant: 10000).isActive =  true
+                              //  RoomButton.bottomAnchor.constraint(equalTo: self.roomScrollView.bottomAnchor, constant: -16).isActive = true
+                                
+                                if isMod % 2 != 0{
+                                    buttonX += 200
+                                }else{
+                                    buttonY += 110
+                                    buttonX = 0
+                                }
+                                isMod += 1
+                               
+                            }
                             
                             
                             
                             
                             
                         }
+                    
+                    }
+                    
+                                        DispatchQueue.main.async {
+                    
+                    for button in self.buttons{
+                        
+                       // button.addTarget(self, action: #selector(self.RoomButtonPressed), for: UIControl.Event.touchUpInside)
+                       // button.frame.origin.y += 100
+                       // button.translatesAutoresizingMaskIntoConstraints = false
+                        self.roomScrollView.addSubview(button)
+                        button.topAnchor.constraint(equalTo: self.roomScrollView.topAnchor, constant: 1000).isActive = true
+                        button.bottomAnchor.constraint(equalTo: self.roomScrollView.bottomAnchor, constant: -1000).isActive = true
+                        
                         
                     }
+                    }
+                    
+                
+                    
+                    
                     
                 }
                 
@@ -185,6 +261,15 @@ class HomeViewController: UIViewController {
             
             
 }
+    
+    
+    
+    
+    @objc func RoomButtonPressed(sender:UIButton!){
+        if sender.titleLabel?.text != nil {
+            print(self.roomSearch.text)
+        }
+    }
     
     
     
