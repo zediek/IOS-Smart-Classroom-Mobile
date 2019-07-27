@@ -353,6 +353,7 @@ class RemoteViewController: UIViewController {
             print(data as Any)
             print(String(data: data!, encoding: String.Encoding.utf8)!)
         }).resume()
+        //resume
         
         
     }
