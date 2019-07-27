@@ -73,11 +73,12 @@ class RemoteViewController: UIViewController {
     
     func createBackButton(){
         let backbutton = UIButton()
-        backbutton.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
+        backbutton.frame = CGRect(x: 10, y: 50, width: 50, height: 50)
+        backbutton.layer.cornerRadius = 0.5 * backbutton.bounds.size.width
         backbutton.tintColor = UIColor.white
         backbutton.backgroundColor = UIColor.black
-        backbutton.titleLabel?.font = backbutton.titleLabel?.font.withSize(24)
-        backbutton.setTitle("Back", for: UIControl.State.normal)
+        backbutton.titleLabel?.font = backbutton.titleLabel?.font.withSize(18)
+        backbutton.setTitle("<", for: UIControl.State.normal)
         backbutton.addTarget(self, action: #selector(self.backButtonOnClick), for: UIControl.Event.touchUpInside)
         self.view.addSubview(backbutton)
     }
@@ -99,7 +100,11 @@ class RemoteViewController: UIViewController {
     }
     
     func createAirconSwitch(){
-        AirconSwitch.frame = CGRect(x: 350, y: 230, width: 50, height: 10)
+        let screemSize: CGRect = UIScreen.main.bounds
+        print("Screen width size: \(screemSize.width)")
+        let alignRight = screemSize.width - 64
+        print("Right align position: \(alignRight)")
+        AirconSwitch.frame = CGRect(x: alignRight, y: 230, width: 50, height: 10)
         if self.airconStatus == true{
             AirconSwitch.isOn = true
             RoomSlider.isEnabled = true
@@ -121,7 +126,11 @@ class RemoteViewController: UIViewController {
     
     
     func createTempSlider(){
-        RoomSlider.frame = CGRect(x: 10, y: 400, width: 390, height: 100)
+        let screemSize: CGRect = UIScreen.main.bounds
+        print("Screen width size: \(screemSize.width)")
+        let sliderWidthSize = screemSize.width - 24
+        print("Slider width size: \(sliderWidthSize)")
+        RoomSlider.frame = CGRect(x: 10, y: 400, width: sliderWidthSize, height: 100)
         RoomSlider.minimumValue = 16
         RoomSlider.maximumValue = 26
         print(Int(self.tempStatus))
@@ -139,7 +148,11 @@ class RemoteViewController: UIViewController {
     }
     
     func createLightsSwitch(){
-        LightsSwitch.frame = CGRect(x: 350, y: 530, width: 50, height: 10)
+        let screemSize: CGRect = UIScreen.main.bounds
+        print("Screen width size: \(screemSize.width)")
+        let alignRight = screemSize.width - 64
+        print("Right align position: \(alignRight)")
+        LightsSwitch.frame = CGRect(x: alignRight, y: 530, width: 50, height: 10)
         if self.lightsStatus == true{
             LightsSwitch.isOn = true
         }else{
@@ -157,7 +170,11 @@ class RemoteViewController: UIViewController {
     }
     
     func createDoorSwitch(){
-        DoorSwitch.frame = CGRect(x: 350, y: 630, width: 50, height: 10)
+        let screemSize: CGRect = UIScreen.main.bounds
+        print("Screen width size: \(screemSize.width)")
+        let alignRight = screemSize.width - 64
+        print("Right align position: \(alignRight)")
+        DoorSwitch.frame = CGRect(x: alignRight, y: 630, width: 50, height: 10)
         if self.doorStatus == true{
             DoorSwitch.isOn = true
         }else{
@@ -353,7 +370,6 @@ class RemoteViewController: UIViewController {
             print(data as Any)
             print(String(data: data!, encoding: String.Encoding.utf8)!)
         }).resume()
-        //resume
         
         
     }
