@@ -21,6 +21,7 @@ class RegisterViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.view.backgroundColor = UIColor.darkGray
 
         // Do any additional setup after loading the view.
     }
@@ -52,7 +53,7 @@ class RegisterViewController: UIViewController {
         
         
         
-        let myurl = URL(string: "http://10.99.226.141:5000/smart-classroom/register")
+        let myurl = URL(string: "https://smart-classroom.foundationu.com/api/register")
         var request = URLRequest(url: myurl!)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "content-type")
@@ -63,7 +64,7 @@ class RegisterViewController: UIViewController {
             "Lname": lastnametxt.text!,
             "email": emailtxt.text!,
             "username": usernametxt.text!,
-            "password": passwordtxt.text!
+            "userpassword": passwordtxt.text!
         ] as [String: String]
         
         
@@ -96,9 +97,9 @@ class RegisterViewController: UIViewController {
             let json = try? JSONSerialization.jsonObject(with: data, options: [])
             
             if let r = json as? [String: Any]{
-                if let register = r["registered"] as? Bool {
-                    if(register == false){
-                        self.displayMessage(userMessage: "Register Failed")
+                if let register = r["response"] as? String {
+                    if register != "success"{
+                        self.displayMessage(userMessage:register)
                         return
                     }
                     
@@ -108,6 +109,11 @@ class RegisterViewController: UIViewController {
                         appDelegate?.window??.rootViewController = loginViewController
                     }
                 }
+                
+                if let message = r["message"] as? String {
+                    self.displayMessage(userMessage: message)
+                }
+                
             }
             
         }
