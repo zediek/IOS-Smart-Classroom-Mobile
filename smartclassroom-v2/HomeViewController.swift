@@ -41,7 +41,7 @@ struct DeviceData {
     let class_name: String
     let device_name: String
     let remote_design: String
-    let device_status: Any
+    let device_status: String
     let remote_design_id: Int
     let device_id: Int
     let room_status_id: Int
@@ -55,7 +55,7 @@ struct DeviceData {
         guard let class_name = jsonDevice["class_name"] as? String else { throw DeviceError.deviceMissing("class_name is missing") }
         guard let device_name = jsonDevice["device_name"] as? String else { throw DeviceError.deviceMissing("device_name is missing") }
         guard let remote_design = jsonDevice["remote_design"] as? String else { throw DeviceError.deviceMissing("remote_design is missong") }
-        guard let device_status = jsonDevice["device_status"] as? Any else { throw DeviceError.deviceMissing("device_status is missing") }
+        guard let device_status = jsonDevice["device_status"] as? String else { throw DeviceError.deviceMissing("device_status is missing") }
         guard let remote_design_id = jsonDevice["remote_design_id"] as? Int else { throw DeviceError.deviceMissing("remote_design_id is missing") }
         guard let device_id = jsonDevice["device_id"] as? Int else { throw DeviceError.deviceMissing("device_id is missong") }
         guard let room_status_id = jsonDevice["room_status_id"] as? Int else { throw DeviceError.deviceMissing("room_status_id is missong") }
@@ -76,6 +76,8 @@ class HomeViewController: UIViewController {
     @IBOutlet weak var roomSearch: UISearchBar!
     @IBOutlet weak var roomScrollView: UIScrollView!
     
+    var refresher: UIRefreshControl!
+    
     var buttons = [UIButton]()
     
     var roomArray = [String]()
@@ -87,7 +89,7 @@ class HomeViewController: UIViewController {
     var roomName: String = ""
     var airconStatus:String = ""
     var airconId:Int = 0
-    var tempStatus: String = ""
+    var tempStatus: Int = 0
     var tempId: Int = 0
     var lightsStatus: String = ""
     var lightsId: Int = 0
@@ -102,8 +104,28 @@ class HomeViewController: UIViewController {
         self.view.backgroundColor = UIColor.darkGray
         createRoomArray()
         //createRoomButton()
+        
+        
+        
+        refresher = UIRefreshControl()
+        refresher.attributedTitle = NSAttributedString(string: "Pull to refresh")
+        refresher.addTarget(self, action: #selector(self.populate), for:  UIControl.Event.valueChanged)
+        self.roomScrollView.addSubview(refresher)
 
         // Do any additional setup after loading the view.
+    }
+    
+    
+    
+    @objc func populate(){
+        refresher.endRefreshing()
+        DispatchQueue.main.async {
+            let homeViewController = self.storyboard?.instantiateViewController(withIdentifier: "HomeViewController") as! HomeViewController
+            homeViewController.usertype = self.usertype
+            homeViewController.token = self.token
+            let appDelegate = UIApplication.shared.delegate
+            appDelegate?.window??.rootViewController = homeViewController
+        }
     }
     
     
@@ -161,45 +183,41 @@ class HomeViewController: UIViewController {
                                                 self.airconId = JSONDEVICE.device_id
                                                 
                                                 print(self.airconId)
-                                                if let airconBool = try? JSONDEVICE.device_status as? String{
-                                                    if airconBool == "true"{
+                                                let airconBool = Bool(JSONDEVICE.device_status)
+                                                    if airconBool == true{
                                                         self.airconStatus = "on"
                                                     }else{
                                                         self.airconStatus = "off"
                                                     }
-                                                }
                                             break
                                         case "Aircon temperature":
                                             self.tempId = JSONDEVICE.device_id
                                             
                                             print(self.tempId)
-                                            self.tempStatus = JSONDEVICE.device_status as! String
+                                                self.tempStatus = Int(JSONDEVICE.device_status)!
                                         break
                                         case "Lights":
                                             self.lightsId = JSONDEVICE.device_id
                                             print(self.lightsId)
-                                            if let lightsBool = try? JSONDEVICE.device_status as? String{
-                                                if lightsBool == "true"{
+                                            let lightsBool = Bool(JSONDEVICE.device_status)
+                                                if lightsBool == true{
                                                     self.lightsStatus = "on"
                                                 }else{
                                                     self.lightsStatus = "off"
                                                 }
-                                                
-                                            }
                                         break
                                         case "Door":
                                             self.doorId = JSONDEVICE.device_id
                                             
                                             print(self.doorId)
-                                            if let doorBool = try? JSONDEVICE.device_status as? String{
-                                                if doorBool == "true"{
+                                            let doorBool = Bool(JSONDEVICE.device_status)
+                                                if doorBool == true{
                                                     self.doorStatus = "on"
                                                 }else{
                                                     self.doorStatus = "off"
                                                 }
-                                            }
                                         default:
-                                            let temp = "Wala ra"
+                                            print("Wala ra")
                                         }
                                     }
                                  
@@ -209,11 +227,15 @@ class HomeViewController: UIViewController {
                             }
                             
                             DispatchQueue.main.async {
+                                let screemSize: CGRect = UIScreen.main.bounds
+                                print("Screen width size: \(screemSize.width)")
+                                let halfScreenSize = (screemSize.width / 2) - 17
+                                print("Half screen width size: \(halfScreenSize)")
                                 
                               //  print(JD.room_name)
-                                let RoomButton = UIButton(frame: CGRect(x: buttonX, y: buttonY, width: 190, height: 100))
+                                let RoomButton = UIButton(frame: CGRect(x: buttonX, y: buttonY, width: Int(halfScreenSize), height: 100))
                                 RoomButton.titleLabel?.lineBreakMode = NSLineBreakMode.byWordWrapping
-                                var Roomtext = NSAttributedString(string: "\(JD.room_name)\nAircon           \(self.airconStatus)\nTemp           \(self.tempStatus)°C\nLights           \(self.lightsStatus)")
+                                let Roomtext = NSAttributedString(string: "\(JD.room_name)\nAircon           \(self.airconStatus)\nTemp           \(self.tempStatus)°C\nLights           \(self.lightsStatus)")
                                 RoomButton.setAttributedTitle(Roomtext, for: UIControl.State.normal)
                                 RoomButton.tintColor = UIColor.black
                                 RoomButton.titleLabel?.font = UIFont(name: "Arial", size: 14)
@@ -229,7 +251,7 @@ class HomeViewController: UIViewController {
                               //  RoomButton.bottomAnchor.constraint(equalTo: self.roomScrollView.bottomAnchor, constant: -16).isActive = true
                                 
                                 if isMod % 2 != 0{
-                                    buttonX += 200
+                                    buttonX += Int(halfScreenSize) + 10
                                 }else{
                                     buttonY += 110
                                     buttonX = 0
@@ -266,16 +288,20 @@ class HomeViewController: UIViewController {
             }
         }
         task.resume()
-
-            
 }
+    
+    
+    
+    
+    
+    
     @objc func RoomButtonPressed(sender:UIButton!){
         
         let pattern = "\n.*"
         
-        let text = sender.titleLabel?.text as! String
+        let text = sender.titleLabel?.text
         let regex = try! NSRegularExpression(pattern: pattern, options: .caseInsensitive)
-        let modText = regex.stringByReplacingMatches(in: text, options: [], range: NSRange(location: 0, length: text.count), withTemplate: "") as NSString
+        let modText = regex.stringByReplacingMatches(in: text!, options: [], range: NSRange(location: 0, length: text!.count), withTemplate: "") as NSString
         
         let attString = NSMutableAttributedString(string: modText as String)
         let roomname = attString.string
@@ -523,4 +549,21 @@ class HomeViewController: UIViewController {
 
 
     }
+    
+    
+    
+    
+    
+    
+
+    @IBAction func logout(_ sender: UIBarButtonItem) {
+        DispatchQueue.main.async {
+            let loginViewController = self.storyboard?.instantiateViewController(withIdentifier: "LoginViewController") as! LoginViewController
+            let appDelegate = UIApplication.shared.delegate
+            appDelegate?.window??.rootViewController = loginViewController
+        }
+    }
+    
+
+    
 }
