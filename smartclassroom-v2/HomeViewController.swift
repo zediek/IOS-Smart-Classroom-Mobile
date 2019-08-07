@@ -120,7 +120,7 @@ class HomeViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.view.backgroundColor = UIColor.darkGray
+       // self.view.backgroundColor = UIColor.darkGray
         self.searchView.frame = CGRect(x: 20, y: 100, width: (Int(UIScreen.main.bounds.width) - 40), height: 60)
         self.stackView.frame = CGRect(x: 10, y: 5, width: (Int(UIScreen.main.bounds.width) - 58), height: 50)
         self.stackView.backgroundColor = UIColor.white
@@ -582,9 +582,6 @@ class HomeViewController: UIViewController {
             
                 
             }
-        
-        justAnotherArray.removeAll()
-        buttons.removeAll()
        
         
     }
